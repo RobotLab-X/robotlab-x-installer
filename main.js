@@ -1,5 +1,5 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron')
-const { exec } = require('child_process')
+const { spawn } = require('child_process') // Use spawn to stream stdout and stderr
 const path = require('path')
 const os = require('os') // Import the os module to gather system information
 
@@ -43,9 +43,6 @@ app.on('ready', () => {
   })
 })
 
-// Path to npm in node_modules (if bundled)
-const npmPath = path.join(__dirname, 'node_modules', 'npm', 'bin', 'npm-cli.js')
-
 // Handle 'choose-directory' event
 ipcMain.on('choose-directory', (event) => {
   dialog.showOpenDialog(mainWindow, {
@@ -63,16 +60,34 @@ ipcMain.on('choose-directory', (event) => {
   })
 })
 
-// Handle 'install-package' event
+// Handle 'install-package' event and perform git clone
 ipcMain.on('install-package', (event, { packageName, installDir }) => {
-  console.log(`Installing package: ${packageName} to ${installDir}`)
+  console.log(`Cloning RobotLab-X repository to ${installDir}`)
 
-  // Mock installation process with a timer
-  setTimeout(() => {
-    event.sender.send('install-output', `Installing ${packageName} to ${installDir}...\n`)
-    setTimeout(() => {
-      event.sender.send('install-output', `Installation of ${packageName} complete!\n`)
+  // Git clone command
+  const gitCloneCommand = `git clone https://github.com/RobotLab-X/robotlab-x.git ${installDir}`
+
+  // Use spawn to run git clone and capture the output as it happens
+  const cloneProcess = spawn('git', ['clone', 'https://github.com/RobotLab-X/robotlab-x.git', installDir])
+
+  // Stream stdout to renderer
+  cloneProcess.stdout.on('data', (data) => {
+    event.sender.send('install-output', `STDOUT: ${data}`)
+  })
+
+  // Stream stderr to renderer
+  cloneProcess.stderr.on('data', (data) => {
+    event.sender.send('install-output', `STDERR: ${data}`)
+  })
+
+  // When the clone process is finished
+  cloneProcess.on('close', (code) => {
+    if (code === 0) {
+      event.sender.send('install-output', 'Git clone completed successfully!\n')
       event.sender.send('install-complete') // Notify that installation is complete
-    }, 3000) // Mock a 3-second install process
-  }, 1000) // Delay before starting the mock process
+    } else {
+      event.sender.send('install-output', `Git clone failed with code ${code}\n`)
+      event.sender.send('install-error', `Git clone failed with code ${code}`)
+    }
+  })
 })
