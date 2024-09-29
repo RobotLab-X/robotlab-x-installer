@@ -64,11 +64,14 @@ ipcMain.on('choose-directory', (event) => {
 ipcMain.on('install-package', (event, { packageName, installDir }) => {
   console.log(`Cloning RobotLab-X repository to ${installDir}`)
 
+  let tag = robotlabxVersion
+  let cloneDir = path.join(installDir, `robotlab-x-${tag}`)
+
   // Git clone command
-  const gitCloneCommand = `git clone https://github.com/RobotLab-X/robotlab-x.git ${installDir}`
+  const gitCloneCommand = `git clone https://github.com/RobotLab-X/robotlab-x.git ${cloneDir}`
 
   // Use spawn to run git clone and capture the output as it happens
-  const cloneProcess = spawn('git', ['clone', 'https://github.com/RobotLab-X/robotlab-x.git', installDir])
+  const cloneProcess = spawn('git', ['clone', 'https://github.com/RobotLab-X/robotlab-x.git', cloneDir])
 
   // Stream stdout to renderer
   cloneProcess.stdout.on('data', (data) => {
