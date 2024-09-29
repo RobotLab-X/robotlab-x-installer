@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,31 +10,46 @@
       background-color: #0C161C;
       color: #FCFDFC;
       font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      flex-direction: column;
     }
 
-    label, input, button, h1 {
+    label,
+    input,
+    button,
+    h1 {
       color: #FCFDFC;
     }
 
-    button, select {
+    button,
+    select {
       background-color: #1F2A36;
       color: #FCFDFC;
       border: none;
-      padding: 10px;
+      padding: 5px;
       cursor: pointer;
-    }
-
-    button:hover, select:hover {
-      background-color: #334556;
-    }
-
-    table {
+      height: 100%;
       width: 100%;
     }
 
+    button:disabled {
+      background-color: #666;
+      cursor: not-allowed;
+    }
+
+    table {
+      width: 50%;
+      border-spacing: 20px;
+    }
+    
     td {
       padding: 10px;
       vertical-align: top;
+      height: 100%; /* Set table cell height to full available height */
     }
 
     .info {
@@ -41,6 +57,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <h1 id="title">RobotLab-X Installer</h1>
@@ -48,16 +65,27 @@
   <table>
     <tr>
       <td>
-        <select id="version-select">
+        <select id="version-select" class="full-width">
           <option disabled selected>Select Version</option>
         </select>
-        <br><br>
-        <button id="choose-dir">Choose Install Directory</button>
       </td>
       <td>
-        <span class="info" id="selected-version">Selected Version: 0.9.125</span><br><br>
+        <span class="info" id="selected-version"></span><br><br>
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <button id="choose-dir" class="full-width">Choose Install Directory</button>
+      </td>
+      <td>
         <span class="info" id="selected-directory">No Directory Selected</span>
       </td>
+    </tr>
+    <tr>
+      <td> 
+        <button id="install-btn" class="full-width" disabled>Install</button>
+      </td>
+      <td></td>
     </tr>
   </table>
 
@@ -71,15 +99,27 @@
     const chooseDirButton = document.getElementById('choose-dir')
     const selectedVersion = document.getElementById('selected-version')
     const selectedDirectory = document.getElementById('selected-directory')
+    const installButton = document.getElementById('install-btn')
     const titleElement = document.getElementById('title')
 
-    let currentVersion = '0.9.125'
+    let currentVersion = null
+    let currentDirectory = null
+
+    // Function to check if both version and directory are selected
+    function checkInstallButton() {
+      if (currentVersion && currentDirectory) {
+        installButton.disabled = false
+      } else {
+        installButton.disabled = true
+      }
+    }
 
     // Listen for the version from the main process
     ipcRenderer.on('set-version', (event, version) => {
-      titleElement.textContent = `RobotLab-X ${version} Installer`
+      titleElement.textContent = `RobotLab-X Installer`
       currentVersion = version
-      selectedVersion.textContent = `Selected Version: ${version}`
+      selectedVersion.textContent = `${version}`
+      checkInstallButton()
     })
 
     // Listen for the versions list from the main process
@@ -93,7 +133,8 @@
 
       versionSelect.addEventListener('change', () => {
         currentVersion = versionSelect.value
-        selectedVersion.textContent = `Selected Version: ${currentVersion}`
+        selectedVersion.textContent = `${currentVersion}`
+        checkInstallButton()
       })
     })
 
@@ -103,7 +144,9 @@
     })
 
     ipcRenderer.on('directory-selected', (event, directory) => {
+      currentDirectory = directory
       selectedDirectory.textContent = `Selected Directory: ${directory}`
+      checkInstallButton()
     })
 
     ipcRenderer.on('install-output', (event, data) => {
@@ -113,7 +156,13 @@
     ipcRenderer.on('install-error', (event, error) => {
       output.textContent += 'Error: ' + error + '\n'
     })
+
+    // Handle the install button click
+    installButton.addEventListener('click', () => {
+      ipcRenderer.send('install-package', { packageName: currentVersion, installDir: currentDirectory })
+    })
   </script>
 
 </body>
+
 </html>
