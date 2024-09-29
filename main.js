@@ -8,6 +8,10 @@ let robotlabxVersions = ['latest', '0.9.125', '0.9.124', '0.9.123']
 let robotlabxVersion = '0.9.125'
 let selectedDirectory = null // Initialize as null to ensure proper functionality
 
+// Path to npm and node from the Electron app's node_modules
+const npmPath = path.join(__dirname, 'node_modules', 'npm', 'bin', 'npm-cli.js')
+const nodePath = process.execPath // Path to the node executable packaged with Electron
+
 app.on('ready', () => {
   mainWindow = new BrowserWindow({
     width: 800,
@@ -68,9 +72,6 @@ ipcMain.on('install-package', (event, { packageName, installDir }) => {
   let cloneDir = path.join(installDir, `robotlab-x-${tag}`)
 
   // Git clone command
-  const gitCloneCommand = `git clone https://github.com/RobotLab-X/robotlab-x.git ${cloneDir}`
-
-  // Use spawn to run git clone and capture the output as it happens
   const cloneProcess = spawn('git', ['clone', 'https://github.com/RobotLab-X/robotlab-x.git', cloneDir])
 
   // Stream stdout to renderer
@@ -83,11 +84,34 @@ ipcMain.on('install-package', (event, { packageName, installDir }) => {
     event.sender.send('install-output', `STDERR: ${data}`)
   })
 
-  // When the clone process is finished
+  // When the clone process is finished, run npm install
   cloneProcess.on('close', (code) => {
     if (code === 0) {
       event.sender.send('install-output', 'Git clone completed successfully!\n')
-      event.sender.send('install-complete') // Notify that installation is complete
+
+      // Run npm install using the packed npm and node
+      const npmInstallProcess = spawn(nodePath, [npmPath, 'run', 'install-all'], { cwd: cloneDir })
+
+      // Stream stdout from npm install
+      npmInstallProcess.stdout.on('data', (data) => {
+        event.sender.send('install-output', `NPM STDOUT: ${data}`)
+      })
+
+      // Stream stderr from npm install
+      npmInstallProcess.stderr.on('data', (data) => {
+        event.sender.send('install-output', `NPM STDERR: ${data}`)
+      })
+
+      // When npm install is finished
+      npmInstallProcess.on('close', (npmCode) => {
+        if (npmCode === 0) {
+          event.sender.send('install-output', 'NPM install completed successfully!\n')
+          event.sender.send('install-complete') // Notify that installation is complete
+        } else {
+          event.sender.send('install-output', `NPM install failed with code ${npmCode}\n`)
+          event.sender.send('install-error', `NPM install failed with code ${npmCode}`)
+        }
+      })
     } else {
       event.sender.send('install-output', `Git clone failed with code ${code}\n`)
       event.sender.send('install-error', `Git clone failed with code ${code}`)
