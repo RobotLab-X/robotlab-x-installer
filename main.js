@@ -62,3 +62,17 @@ ipcMain.on('choose-directory', (event) => {
     event.sender.send('install-error', 'Error selecting directory')
   })
 })
+
+// Handle 'install-package' event
+ipcMain.on('install-package', (event, { packageName, installDir }) => {
+  console.log(`Installing package: ${packageName} to ${installDir}`)
+
+  // Mock installation process with a timer
+  setTimeout(() => {
+    event.sender.send('install-output', `Installing ${packageName} to ${installDir}...\n`)
+    setTimeout(() => {
+      event.sender.send('install-output', `Installation of ${packageName} complete!\n`)
+      event.sender.send('install-complete') // Notify that installation is complete
+    }, 3000) // Mock a 3-second install process
+  }, 1000) // Delay before starting the mock process
+})

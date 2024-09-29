@@ -167,14 +167,34 @@
       output.textContent += 'Error: ' + error + '\n'
     })
 
+
     // Listen for system details from the main process
     ipcRenderer.on('system-details', (event, systemDetails) => {
       systemDetailsElement.textContent = JSON.stringify(systemDetails, null, 2)
     })
 
+
     // Handle the install button click
     installButton.addEventListener('click', () => {
+      console.log('Install button clicked!')
+      output.textContent += 'Install button clicked!\n'
+
+      // Disable the install button to prevent multiple clicks
+      installButton.disabled = true
+
+      // Send the install event to the main process
       ipcRenderer.send('install-package', { packageName: currentVersion, installDir: currentDirectory })
+    })
+
+    // Listen for system details from the main process
+    ipcRenderer.on('system-details', (event, systemDetails) => {
+      systemDetailsElement.textContent = JSON.stringify(systemDetails, null, 2)
+    })
+
+    // Re-enable the install button after installation
+    ipcRenderer.on('install-complete', () => {
+      installButton.disabled = false
+      output.textContent += 'Installation completed!\n'
     })
   </script>
 
