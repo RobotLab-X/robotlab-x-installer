@@ -27,31 +27,8 @@ app.on('ready', () => {
   })
 })
 
-
 // Path to npm in node_modules (if bundled)
 const npmPath = path.join(__dirname, 'node_modules', 'npm', 'bin', 'npm-cli.js')
-
-// Handle 'install-package' event (although this isn't used in your form currently)
-ipcMain.on('install-package', (event, { packageName, installDir }) => {
-  console.log(`Installing package: ${packageName} to ${installDir || selectedDirectory}`)
-
-  const cwd = installDir || selectedDirectory || __dirname
-
-  const installCommand = `node ${npmPath} install ${packageName}`
-  const npmProcess = exec(installCommand, { cwd })
-
-  npmProcess.stdout.on('data', (data) => {
-    event.sender.send('install-output', data)
-  })
-
-  npmProcess.stderr.on('data', (data) => {
-    event.sender.send('install-error', data)
-  })
-
-  npmProcess.on('close', (code) => {
-    event.sender.send('install-output', `Installation process exited with code ${code}`)
-  })
-})
 
 // Handle 'choose-directory' event
 ipcMain.on('choose-directory', (event) => {

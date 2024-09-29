@@ -21,6 +21,7 @@
       border: none;
       padding: 10px 20px;
       cursor: pointer;
+      margin-right: 10px;
     }
 
     button:hover {
@@ -39,6 +40,24 @@
       height: auto;
       margin-right: 15px;
     }
+
+    .row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .info {
+      margin-left: 10px;
+      color: #FCFDFC;
+    }
+
+    select {
+      background-color: #1F2A36;
+      color: #FCFDFC;
+      border: none;
+      padding: 10px;
+    }
   </style>
 </head>
 <body>
@@ -48,8 +67,16 @@
     <h1 id="title">RobotLab-X Installer</h1> <!-- Placeholder for dynamic version -->
   </div>
 
-  <button id="choose-version">Choose Version</button>
-  <button id="choose-dir">Choose Install Directory</button>
+  <div class="row">
+    <button id="choose-version">Choose Version</button>
+    <select id="version-select" style="display:none;"></select>
+    <span class="info" id="selected-version">Selected Version: 0.9.125</span>
+  </div>
+
+  <div class="row">
+    <button id="choose-dir">Choose Install Directory</button>
+    <span class="info" id="selected-directory">No Directory Selected</span>
+  </div>
 
   <pre id="output"></pre>
 
@@ -58,11 +85,39 @@
 
     const output = document.getElementById('output')
     const chooseDirButton = document.getElementById('choose-dir')
+    const chooseVersionButton = document.getElementById('choose-version')
+    const versionSelect = document.getElementById('version-select')
+    const selectedVersion = document.getElementById('selected-version')
+    const selectedDirectory = document.getElementById('selected-directory')
     const titleElement = document.getElementById('title')
+
+    let currentVersion = '0.9.125'
 
     // Listen for the version from the main process
     ipcRenderer.on('set-version', (event, version) => {
       titleElement.textContent = `RobotLab-X ${version} Installer`
+      currentVersion = version
+      selectedVersion.textContent = `Selected Version: ${version}`
+    })
+
+    // Listen for the versions list from the main process
+    ipcRenderer.on('set-versions', (event, versions) => {
+      versionSelect.style.display = 'inline-block' // Show the select box
+      versions.forEach(version => {
+        const option = document.createElement('option')
+        option.value = version
+        option.textContent = version
+        versionSelect.appendChild(option)
+      })
+
+      versionSelect.addEventListener('change', () => {
+        currentVersion = versionSelect.value
+        selectedVersion.textContent = `Selected Version: ${currentVersion}`
+      })
+    })
+
+    chooseVersionButton.addEventListener('click', () => {
+      versionSelect.style.display = versionSelect.style.display === 'none' ? 'inline-block' : 'none'
     })
 
     chooseDirButton.addEventListener('click', () => {
@@ -71,7 +126,7 @@
     })
 
     ipcRenderer.on('directory-selected', (event, directory) => {
-      output.textContent += 'Selected Install Directory: ' + directory + '\n'
+      selectedDirectory.textContent = `Selected Directory: ${directory}`
     })
 
     ipcRenderer.on('install-output', (event, data) => {
