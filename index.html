@@ -15,68 +15,51 @@
       color: #FCFDFC;
     }
 
-    button {
-      background-color: #1F2A36;
-      color: #FCFDFC;
-      border: none;
-      padding: 10px 20px;
-      cursor: pointer;
-      margin-right: 10px;
-    }
-
-    button:hover {
-      background-color: #334556;
-    }
-
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      margin-bottom: 20px;
-    }
-
-    .header img {
-      width: 50px;
-      height: auto;
-      margin-right: 15px;
-    }
-
-    .row {
-      display: flex;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .info {
-      margin-left: 10px;
-      color: #FCFDFC;
-    }
-
-    select {
+    button, select {
       background-color: #1F2A36;
       color: #FCFDFC;
       border: none;
       padding: 10px;
+      cursor: pointer;
+    }
+
+    button:hover, select:hover {
+      background-color: #334556;
+    }
+
+    table {
+      width: 100%;
+    }
+
+    td {
+      padding: 10px;
+      vertical-align: top;
+    }
+
+    .info {
+      color: #FCFDFC;
     }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <img src="icon.png" alt="RobotLab-X Logo" />
-    <h1 id="title">RobotLab-X Installer</h1> <!-- Placeholder for dynamic version -->
-  </div>
+  <h1 id="title">RobotLab-X Installer</h1>
 
-  <div class="row">
-    <button id="choose-version">Choose Version</button>
-    <select id="version-select" style="display:none;"></select>
-    <span class="info" id="selected-version">Selected Version: 0.9.125</span>
-  </div>
-
-  <div class="row">
-    <button id="choose-dir">Choose Install Directory</button>
-    <span class="info" id="selected-directory">No Directory Selected</span>
-  </div>
+  <table>
+    <tr>
+      <td>
+        <select id="version-select">
+          <option disabled selected>Select Version</option>
+        </select>
+        <br><br>
+        <button id="choose-dir">Choose Install Directory</button>
+      </td>
+      <td>
+        <span class="info" id="selected-version">Selected Version: 0.9.125</span><br><br>
+        <span class="info" id="selected-directory">No Directory Selected</span>
+      </td>
+    </tr>
+  </table>
 
   <pre id="output"></pre>
 
@@ -84,9 +67,8 @@
     const { ipcRenderer } = require('electron')
 
     const output = document.getElementById('output')
-    const chooseDirButton = document.getElementById('choose-dir')
-    const chooseVersionButton = document.getElementById('choose-version')
     const versionSelect = document.getElementById('version-select')
+    const chooseDirButton = document.getElementById('choose-dir')
     const selectedVersion = document.getElementById('selected-version')
     const selectedDirectory = document.getElementById('selected-directory')
     const titleElement = document.getElementById('title')
@@ -102,7 +84,6 @@
 
     // Listen for the versions list from the main process
     ipcRenderer.on('set-versions', (event, versions) => {
-      versionSelect.style.display = 'inline-block' // Show the select box
       versions.forEach(version => {
         const option = document.createElement('option')
         option.value = version
@@ -114,10 +95,6 @@
         currentVersion = versionSelect.value
         selectedVersion.textContent = `Selected Version: ${currentVersion}`
       })
-    })
-
-    chooseVersionButton.addEventListener('click', () => {
-      versionSelect.style.display = versionSelect.style.display === 'none' ? 'inline-block' : 'none'
     })
 
     chooseDirButton.addEventListener('click', () => {
