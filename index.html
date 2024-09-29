@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RobotLab-X Installer</title>
+  <style>
+    body {
+      background-color: #0C161C;
+      color: #FCFDFC;
+      font-family: Arial, sans-serif;
+    }
+
+    label, input, button, h1 {
+      color: #FCFDFC;
+    }
+
+    button {
+      background-color: #1F2A36;
+      color: #FCFDFC;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #334556;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      margin-bottom: 20px;
+    }
+
+    .header img {
+      width: 50px; /* Adjust the icon size */
+      height: auto;
+      margin-right: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <img src="icon.png" alt="RobotLab-X Logo" />
+    <h1>RobotLab-X Installer</h1>
+  </div>
+
+  <form id="package-form">
+    <label for="package-name">Enter package name:</label>
+    <input type="text" id="package-name" required>
+    <button type="submit">Install Package</button>
+  </form>
+
+  <button id="choose-dir">Choose Install Directory</button>
+
+  <pre id="output"></pre>
+
+  <script>
+    const { ipcRenderer } = require('electron')
+
+    const form = document.getElementById('package-form')
+    const output = document.getElementById('output')
+    const chooseDirButton = document.getElementById('choose-dir')
+
+    let installDir = null
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault()
+      const packageName = document.getElementById('package-name').value
+
+      // Send package name and selected directory to main process
+      ipcRenderer.send('install-package', { packageName, installDir })
+    })
+
+    chooseDirButton.addEventListener('click', () => {
+      // Trigger directory chooser in the main process
+      ipcRenderer.send('choose-directory')
+    })
+
+    ipcRenderer.on('directory-selected', (event, directory) => {
+      installDir = directory
+      output.textContent += 'Selected Install Directory: ' + directory + '\n'
+    })
+
+    ipcRenderer.on('install-output', (event, data) => {
+      output.textContent += data + '\n'
+    })
+
+    ipcRenderer.on('install-error', (event, error) => {
+      output.textContent += 'Error: ' + error + '\n'
+    })
+  </script>
+
+</body>
+</html>
