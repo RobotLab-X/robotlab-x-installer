@@ -35,7 +35,7 @@
     }
 
     .header img {
-      width: 50px; /* Adjust the icon size */
+      width: 50px;
       height: auto;
       margin-right: 15px;
     }
@@ -45,14 +45,8 @@
 
   <div class="header">
     <img src="icon.png" alt="RobotLab-X Logo" />
-    <h1>RobotLab-X Installer</h1>
+    <h1 id="title">RobotLab-X Installer</h1> <!-- Placeholder for dynamic version -->
   </div>
-
-  <form id="package-form">
-    <label for="package-name">Enter package name:</label>
-    <input type="text" id="package-name" required>
-    <button type="submit">Install Package</button>
-  </form>
 
   <button id="choose-dir">Choose Install Directory</button>
 
@@ -61,18 +55,13 @@
   <script>
     const { ipcRenderer } = require('electron')
 
-    const form = document.getElementById('package-form')
     const output = document.getElementById('output')
     const chooseDirButton = document.getElementById('choose-dir')
+    const titleElement = document.getElementById('title')
 
-    let installDir = null
-
-    form.addEventListener('submit', (event) => {
-      event.preventDefault()
-      const packageName = document.getElementById('package-name').value
-
-      // Send package name and selected directory to main process
-      ipcRenderer.send('install-package', { packageName, installDir })
+    // Listen for the version from the main process
+    ipcRenderer.on('set-version', (event, version) => {
+      titleElement.textContent = `RobotLab-X ${version} Installer`
     })
 
     chooseDirButton.addEventListener('click', () => {
@@ -81,7 +70,6 @@
     })
 
     ipcRenderer.on('directory-selected', (event, directory) => {
-      installDir = directory
       output.textContent += 'Selected Install Directory: ' + directory + '\n'
     })
 
