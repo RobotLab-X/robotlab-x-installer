@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron')
 const { exec } = require('child_process')
 const path = require('path')
+const os = require('os') // Import the os module to gather system information
 
 let mainWindow
 let robotlabxVersions = ['latest', '0.9.125', '0.9.124', '0.9.123']
@@ -20,10 +21,25 @@ app.on('ready', () => {
 
   mainWindow.loadFile('index.html')
 
-  // Send version to the renderer once the window is ready
+  // Send version and system details to the renderer once the window is ready
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindow.webContents.send('set-version', robotlabxVersion)
     mainWindow.webContents.send('set-versions', robotlabxVersions)
+    
+    // Query system details
+    const systemDetails = {
+      architecture: os.arch(),
+      platform: os.platform(),
+      osVersion: os.version ? os.version() : 'Unknown', // os.version() might not be available on all systems
+      release: os.release(),
+      type: os.type(),
+      totalMemory: os.totalmem(),
+      freeMemory: os.freemem(),
+      cpuCores: os.cpus().length,
+    }
+
+    // Send system details to the renderer process
+    mainWindow.webContents.send('system-details', systemDetails)
   })
 })
 

@@ -53,6 +53,11 @@
     .info {
       color: #FCFDFC;
     }
+
+    .system-info {
+      margin-top: 20px;
+      font-size: 14px;
+    }
   </style>
 </head>
 
@@ -87,6 +92,12 @@
     </tr>
   </table>
 
+  <!-- Section for displaying system details -->
+  <div class="system-info">
+    <h3>System Information:</h3>
+    <pre id="system-details"></pre>
+  </div>
+
   <pre id="output"></pre>
 
   <script>
@@ -99,6 +110,7 @@
     const selectedDirectory = document.getElementById('selected-directory')
     const installButton = document.getElementById('install-btn')
     const titleElement = document.getElementById('title')
+    const systemDetailsElement = document.getElementById('system-details')
 
     let currentVersion = null
     let currentDirectory = null
@@ -153,6 +165,11 @@
 
     ipcRenderer.on('install-error', (event, error) => {
       output.textContent += 'Error: ' + error + '\n'
+    })
+
+    // Listen for system details from the main process
+    ipcRenderer.on('system-details', (event, systemDetails) => {
+      systemDetailsElement.textContent = JSON.stringify(systemDetails, null, 2)
     })
 
     // Handle the install button click
