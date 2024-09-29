@@ -3,6 +3,7 @@ const { exec } = require('child_process')
 const path = require('path')
 
 let mainWindow
+let robotlabxVersions = ['latest', '0.9.125', '0.9.124', '0.9.123']
 let robotlabxVersion = '0.9.125'
 let selectedDirectory = null // Initialize as null to ensure proper functionality
 
@@ -18,7 +19,14 @@ app.on('ready', () => {
   })
 
   mainWindow.loadFile('index.html')
+
+  // Send version to the renderer once the window is ready
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.webContents.send('set-version', robotlabxVersion)
+    mainWindow.webContents.send('set-versions', robotlabxVersions)
+  })
 })
+
 
 // Path to npm in node_modules (if bundled)
 const npmPath = path.join(__dirname, 'node_modules', 'npm', 'bin', 'npm-cli.js')
